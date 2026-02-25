@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="CreditReporting.Application/CreditReporting.Application.csproj" />
+  <Project Path="CreditReporting.Domain/CreditReporting.Domain.csproj" />
+  <Project Path="CreditReporting.Infrastructure/CreditReporting.Infrastructure.csproj" />
+  <Project Path="CreditReportingService/CreditReportingService.Api.csproj" />
+</Solution>
