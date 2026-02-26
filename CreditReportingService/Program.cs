@@ -23,6 +23,16 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // 2. Add services to the container.
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        builder =>
+        {
+            builder.AllowAnyOrigin()
+                   .AllowAnyMethod()
+                   .AllowAnyHeader();
+        });
+});
 
 // Add Rate Limiting
 builder.Services.AddRateLimiter(options =>
@@ -100,6 +110,8 @@ builder.Services.AddSwaggerGen(options =>
 });
 var app = builder.Build();
 
+app.UseCors("AllowAll");
+
 // 3. Use Custom Middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
@@ -109,6 +121,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
 
 app.UseHttpsRedirection();
 

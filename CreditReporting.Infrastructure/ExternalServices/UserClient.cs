@@ -10,7 +10,7 @@ namespace CreditReporting.Infrastructure.ExternalServices
     public class UserClient(HttpClient httpClient, IConfiguration configuration) : IUserClient
     {
         private readonly HttpClient _httpClient = httpClient;
-        private readonly string _baseUrl = "http://localhost:5141";
+        private readonly string _baseUrl = configuration["ExternalServices:CustomerServiceApi"] ?? "https://customerservices-c2g4fzd6esajgghv.canadacentral-01.azurewebsites.net";
 
         public async Task<UserDetailsDto?> GetCustomerByUserIdAsync(int userId)
         {
