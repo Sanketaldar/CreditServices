@@ -25,12 +25,12 @@ builder.Host.UseSerilog();
 // 2. Add services to the container.
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
-        builder =>
+    options.AddPolicy("AllowAngular",
+        policy =>
         {
-            builder.AllowAnyOrigin()
-                   .AllowAnyMethod()
-                   .AllowAnyHeader();
+            policy.WithOrigins("http://localhost:4200")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
         });
 });
 
@@ -110,7 +110,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 var app = builder.Build();
 
-app.UseCors("AllowAll");
+
 
 // 3. Use Custom Middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -127,6 +127,8 @@ app.UseHttpsRedirection();
 
 // 4. Use Rate Limiting
 app.UseRateLimiter();
+
+app.UseCors("AllowAngular");
 
 app.UseAuthentication();
 app.UseAuthorization();
