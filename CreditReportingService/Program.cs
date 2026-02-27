@@ -71,7 +71,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
             ValidAudience = builder.Configuration["JwtSettings:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"]))
+                Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"] ?? string.Empty))
         };
     });
 
@@ -112,6 +112,8 @@ var app = builder.Build();
 
 
 
+app.UseCors("AllowAngular");
+
 // 3. Use Custom Middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
@@ -128,7 +130,6 @@ app.UseHttpsRedirection();
 // 4. Use Rate Limiting
 app.UseRateLimiter();
 
-app.UseCors("AllowAngular");
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -66,7 +66,7 @@ namespace CreditReporting.Application.Services
         public async Task<CibilReportDto> CreateAsync(CibilCheckRequest request)
         {
             // PROACTIVE FETCH LOGIC: If PAN is missing, try to fetch from User Service
-            if (!string.IsNullOrEmpty(request.PanNo))
+            if (string.IsNullOrEmpty(request.PanNo))
             {
                 _logger.LogInformation("PAN missing. Attempting to fetch from User Service for CustomerId: {CustomerId} / UserId: {UserId}", request.CustomerId, request.UserId);
 
