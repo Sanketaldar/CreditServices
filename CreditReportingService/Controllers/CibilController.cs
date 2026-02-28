@@ -21,7 +21,13 @@ namespace CreditReportingService.Controllers
         public async Task<IActionResult> Create([FromBody] CibilCheckRequest reportDto)
         {
             var result = await _cibilService.CreateAsync(reportDto);
-            return CreatedAtAction(nameof(GetByCustomerId), new { customerId = result.CustomerId }, ApiResponse<CibilReportDto>.SuccessResponse(result, "CIBIL report generated successfully."));
+            
+            if (!result.Success)
+            {
+                return BadRequest(ApiResponse<CibilReportDto>.FailureResponse(result.Message));
+            }
+
+            return CreatedAtAction(nameof(GetByCustomerId), new { customerId = result.Data!.CustomerId }, ApiResponse<CibilReportDto>.SuccessResponse(result.Data!, result.Message));
         }
 
         [HttpGet("customer/{customerId}")]

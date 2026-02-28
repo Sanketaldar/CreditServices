@@ -63,60 +63,71 @@ namespace CreditReporting.Application.Services
             return new PaginatedList<CibilReportDto>(dtos, count, pageIndex, pageSize);
         }
 
-        public async Task<CibilReportDto> CreateAsync(CibilCheckRequest request)
+        public async Task<CibilCreationResponse> CreateAsync(CibilCheckRequest request)
         {
             // PROACTIVE FETCH LOGIC: If PAN is missing, try to fetch from User Service
             if (string.IsNullOrEmpty(request.PanNo))
             {
-                _logger.LogInformation("PAN missing. Attempting to fetch from User Service for CustomerId: {CustomerId} / UserId: {UserId}", request.CustomerId, request.UserId);
+                _logger.LogInformation("PAN missing. Attempting to fetch from User Service for CustomerId: {CustomerId}", request.CustomerId);
 
-                //Logic is commented until UserService is ready
+                UserDetailsDto? userDetails = await _userClient.GetCustomerByCustomerIdAsync(request.CustomerId);
 
-                UserDetailsDto ? userDetails = null;
-                //if (request.UserId.HasValue)
-                //    userDetails = await _userClient.GetCustomerByUserIdAsync(request.UserId.Value);
-                //else
-                    userDetails = await _userClient.GetCustomerByCustomerIdAsync(request.CustomerId);
-
-                if (userDetails != null)
+                if (userDetails != null && !string.IsNullOrEmpty(userDetails.Pan))
                 {
                     request.PanNo = userDetails.Pan;
-                    request.CustomerId = userDetails.CustomerId; // Ensure we have the correct CustomerId
                 }
-
             }
 
             if (string.IsNullOrEmpty(request.PanNo))
             {
-                _logger.LogWarning("Could not proceed with CIBIL generation. PAN is still missing.");
-              
+                _logger.LogWarning("Could not proceed with CIBIL generation. PAN is missing for CustomerId: {CustomerId}", request.CustomerId);
+                return new CibilCreationResponse
+                {
+                    Success = false,
+                    Message = "PAN number is required for CIBIL generation. Please ensure the customer has a valid PAN number."
+                };
             }
 
             _logger.LogInformation("Generating CIBIL report for Customer: {CustomerId}, PAN: {PanNo}", request.CustomerId, request.PanNo);
-            
+
+            // Validation: Only 1 CIBIL for PAN exists OR CustomerId exists
             var existingReport = await _context.CibilReports
-                .FirstOrDefaultAsync(r => r.PanNo == request.PanNo && !r.IsDeleted);
-                
+                .FirstOrDefaultAsync(r => (r.PanNo == request.PanNo || r.CustomerId == request.CustomerId) && !r.IsDeleted);
+
             if (existingReport != null)
             {
-                _logger.LogInformation("Found existing report for PAN: {PanNo}. Skipping generation.", request.PanNo);
-                return _mapper.Map<CibilReportDto>(existingReport);
+                string msg = existingReport.PanNo == request.PanNo
+                    ? $"CIBIL report already exists for PAN: {request.PanNo}. Duplicate generation not allowed."
+                    : $"CIBIL report already exists for Customer ID: {request.CustomerId}. Duplicate generation not allowed.";
+
+                _logger.LogInformation(msg);
+                return new CibilCreationResponse
+                {
+                    Success = false,
+                    Message = msg,
+                    Data = _mapper.Map<CibilReportDto>(existingReport)
+                };
             }
 
             var report = _mapper.Map<CibilReport>(request);
-            
+
             report.CibilScore = _random.Next(300, 900);
             report.CreditHistory = $"Auto-generated for PAN: {report.PanNo}";
-           
+
             report.CheckDate = DateTime.UtcNow;
             report.Status = "success";
-            
+
             await _context.CibilReports.AddAsync(report);
             await _context.SaveChangesAsync();
-            
+
             _logger.LogInformation("Successfully generated CIBIL report for Customer: {CustomerId}", report.CustomerId);
-            
-            return _mapper.Map<CibilReportDto>(report);
+
+            return new CibilCreationResponse
+            {
+                Success = true,
+                Message = "CIBIL report generated successfully.",
+                Data = _mapper.Map<CibilReportDto>(report)
+            };
         }
 
         public async Task DeleteAsync(int id)

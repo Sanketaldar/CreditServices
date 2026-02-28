@@ -19,5 +19,13 @@ namespace CreditReporting.Application.DTOs
         public int CustomerId { get; set; }
         public string? PanNo { get; set; }
         public int? UserId { get; set; }
+        
+    }
+
+    public class CibilCreationResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public CibilReportDto? Data { get; set; }
     }
 }

@@ -11,7 +11,7 @@ namespace CreditReporting.Application.Interfaces
         Task<CibilReportDto?> GetByCustomerIdAsync(int customerId);
         Task<IEnumerable<CibilReportDto>> GetAllAsync();
         Task<PaginatedList<CibilReportDto>> GetAllPagedAsync(int pageIndex, int pageSize);
-        Task<CibilReportDto> CreateAsync(CibilCheckRequest request);
+        Task<CibilCreationResponse> CreateAsync(CibilCheckRequest request);
         Task DeleteAsync(int id);
     }
 }
